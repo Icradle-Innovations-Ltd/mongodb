@@ -1,0 +1,21 @@
+{
+  "name": "mongodb-data-retriever",
+  "version": "1.0.0",
+  "description": "Connect to MongoDB and retrieve all data with web UI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "data": "node index.js",
+    "test": "node test_api.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "mongodb": "^6.17.0",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.0.1"
+  },
+  "type": "module"
+}
