@@ -354,39 +354,53 @@
             async loadStats() {
                 try {
                     const response = await fetch('/api/stats');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     const stats = await response.json();
                     this.renderStats(stats);
                 } catch (error) {
                     console.error('Error loading stats:', error);
+                    document.getElementById('stats-section').innerHTML = `
+                        <div class="error">
+                            Failed to load database statistics: ${error.message}
+                        </div>
+                    `;
                 }
             }
 
             async loadCollections() {
                 try {
                     const response = await fetch('/api/collections');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     const collections = await response.json();
                     this.renderCollections(collections);
                     this.populateCollectionSelect(collections);
                 } catch (error) {
                     console.error('Error loading collections:', error);
+                    document.getElementById('data-content').innerHTML = `
+                        <div class="error">
+                            Failed to load collections: ${error.message}
+                        </div>
+                    `;
                 }
             }
 
             renderStats(stats) {
-                const totalDocs = Object.values(stats.collections).reduce((sum, count) => sum + count, 0);
-                
                 const statsHTML = `
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-number">${stats.totalCollections}</div>
+                            <div class="stat-number">${stats.collections}</div>
                             <div class="stat-label">Collections</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">${totalDocs.toLocaleString()}</div>
+                            <div class="stat-number">${stats.totalDocuments.toLocaleString()}</div>
                             <div class="stat-label">Total Documents</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">${stats.databaseName}</div>
+                            <div class="stat-number">${stats.database}</div>
                             <div class="stat-label">Database</div>
                         </div>
                     </div>

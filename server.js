@@ -677,4 +677,10 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-startServer().catch(console.error);
+// For Vercel deployment, we need to export the app
+export default app;
+
+// Only start the server if we're not in a serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    startServer().catch(console.error);
+}
