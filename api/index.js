@@ -16,6 +16,12 @@ const dbName = process.env.DATABASE_NAME;
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+    next();
+});
+
 // MongoDB client
 let client;
 let db;
@@ -37,6 +43,7 @@ async function connectToMongoDB() {
 
 // Get all collections
 app.get('/api/collections', async (req, res) => {
+    console.log('Collections endpoint called');
     try {
         const database = await connectToMongoDB();
         const collections = await database.listCollections().toArray();
@@ -49,15 +56,17 @@ app.get('/api/collections', async (req, res) => {
                 };
             })
         );
+        console.log('Collections response:', collectionsWithCounts);
         res.json(collectionsWithCounts);
     } catch (error) {
         console.error('Error fetching collections:', error);
-        res.status(500).json({ error: 'Failed to fetch collections' });
+        res.status(500).json({ error: 'Failed to fetch collections', details: error.message });
     }
 });
 
 // Get database stats
 app.get('/api/stats', async (req, res) => {
+    console.log('Stats endpoint called');
     try {
         const database = await connectToMongoDB();
         const collections = await database.listCollections().toArray();
@@ -78,10 +87,11 @@ app.get('/api/stats', async (req, res) => {
             });
         }
         
+        console.log('Stats response:', stats);
         res.json(stats);
     } catch (error) {
         console.error('Error fetching stats:', error);
-        res.status(500).json({ error: 'Failed to fetch database stats' });
+        res.status(500).json({ error: 'Failed to fetch database stats', details: error.message });
     }
 });
 
@@ -351,14 +361,14 @@ app.get('/api/collections/:name/schema', async (req, res) => {
     }
 });
 
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
+
 // Catch-all for other API routes
 app.all('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
-});
-
-// For non-API routes, return a simple message
-app.get('/', (req, res) => {
-    res.json({ message: 'MongoDB API is running. Go to /public/index.html for the web interface.' });
 });
 
 export default app;
