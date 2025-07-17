@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MongoDB Data Explorer</title>
+    <title>MongoDB API Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.ico">
-    <link rel="shortcut icon" href="/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -15,599 +14,438 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             color: #333;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
+        .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header .status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
         }
 
-        h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .api-explorer {
+            grid-column: 1 / -1;
+        }
+
+        .endpoint-group {
+            margin-bottom: 2rem;
+        }
+
+        .endpoint-group h3 {
+            color: #2a5298;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
+
+        .endpoint {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .endpoint:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+        }
+
+        .method {
+            background: #4CAF50;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 1rem;
+            min-width: 60px;
             text-align: center;
         }
 
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1em;
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .endpoint-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-left: 1rem;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .stat-item:hover {
+            transform: scale(1.05);
         }
 
         .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #3498db;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .collections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .collection-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .collection-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .collection-name {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .collection-count {
-            color: #3498db;
-            font-size: 1.2em;
-            margin-bottom: 15px;
-        }
-
-        .collection-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
         .search-section {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
         }
 
         .search-form {
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
-        .form-group {
+        .search-input {
             flex: 1;
-            min-width: 200px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #2c3e50;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ecf0f1;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 1em;
+            font-size: 1rem;
             transition: border-color 0.3s ease;
         }
 
-        .form-control:focus {
+        .search-input:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: #2a5298;
         }
 
-        .data-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .data-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .page-btn {
-            padding: 8px 12px;
-            border: 2px solid #3498db;
-            background: white;
-            color: #3498db;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .page-btn:hover,
-        .page-btn.active {
-            background: #3498db;
+        .search-btn {
+            padding: 0.8rem 1.5rem;
+            background: #2a5298;
             color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
         }
 
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .search-btn:hover {
+            background: #1e3c72;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 200px;
+            border: 1px solid #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-y: auto;
         }
 
         .loading {
             text-align: center;
-            padding: 50px;
-            color: #7f8c8d;
-            font-size: 1.2em;
+            color: #666;
+            padding: 2rem;
         }
 
         .error {
-            background: #e74c3c;
-            color: white;
-            padding: 15px;
+            color: #f44336;
+            background: #ffebee;
+            padding: 1rem;
             border-radius: 8px;
-            margin: 20px 0;
+            border-left: 4px solid #f44336;
         }
 
-        .json-viewer {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 20px;
+        .success {
+            color: #4CAF50;
+            background: #e8f5e8;
+            padding: 1rem;
             border-radius: 8px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            line-height: 1.4;
+            border-left: 4px solid #4CAF50;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 2em;
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 1rem;
             }
             
             .search-form {
                 flex-direction: column;
             }
             
-            .form-group {
-                min-width: 100%;
+            .endpoint {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🗄️ MongoDB Data Explorer</h1>
-            <p class="subtitle">Explore your MongoDB database with ease</p>
-        </header>
+    <div class="header">
+        <h1>🗄️ MongoDB API Dashboard</h1>
+        <div class="status">
+            <div class="status-indicator"></div>
+            <span id="connection-status">Connected</span>
+        </div>
+    </div>
 
-        <div id="stats-section">
-            <div class="loading">Loading database statistics...</div>
+    <div class="main-content">
+        <div class="card">
+            <h2>📊 Database Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="collections-count">-</div>
+                    <div class="stat-label">Collections</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="documents-count">-</div>
+                    <div class="stat-label">Documents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="data-size">-</div>
+                    <div class="stat-label">Data Size</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="indexes-count">-</div>
+                    <div class="stat-label">Indexes</div>
+                </div>
+            </div>
         </div>
 
-        <div class="search-section">
-            <h2>🔍 Search Collections</h2>
-            <form class="search-form" id="search-form">
-                <div class="form-group">
-                    <label class="form-label">Collection</label>
-                    <select class="form-control" id="collection-select">
-                        <option value="">Select a collection...</option>
-                    </select>
+        <div class="card">
+            <h2>🔍 Quick Search</h2>
+            <div class="search-section">
+                <div class="search-form">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search movies... (e.g., title:Inception)">
+                    <button class="search-btn" onclick="searchMovies()">Search</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Search Query</label>
-                    <input type="text" class="form-control" id="search-query" placeholder="Enter search term...">
+                <div class="results" id="search-results">
+                    <div class="loading">Ready to search...</div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Field (optional)</label>
-                    <input type="text" class="form-control" id="search-field" placeholder="e.g., title, name">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div>
-            </form>
+            </div>
         </div>
 
-        <div class="data-section">
-            <h2 id="data-title">📊 Collection Data</h2>
-            <div id="data-content">
-                <p class="loading">Select a collection to view data...</p>
+        <div class="card api-explorer">
+            <h2>🚀 API Explorer</h2>
+            
+            <div class="endpoint-group">
+                <h3>Database Operations</h3>
+                <div class="endpoint" onclick="testEndpoint('/api/stats')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/stats</span>
+                    <span class="endpoint-desc">Get database statistics</span>
+                </div>
+                <div class="endpoint" onclick="testEndpoint('/api/collections')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/collections</span>
+                    <span class="endpoint-desc">List all collections</span>
+                </div>
+            </div>
+
+            <div class="endpoint-group">
+                <h3>Collection Operations</h3>
+                <div class="endpoint" onclick="testEndpoint('/api/collections/movies')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/collections/movies</span>
+                    <span class="endpoint-desc">Get movies collection</span>
+                </div>
+                <div class="endpoint" onclick="testEndpoint('/api/collections/movies/search?q=title:Inception')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/collections/movies/search</span>
+                    <span class="endpoint-desc">Search movies</span>
+                </div>
+                <div class="endpoint" onclick="testEndpoint('/api/collections/movies/schema')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/collections/movies/schema</span>
+                    <span class="endpoint-desc">Get movies schema</span>
+                </div>
+                <div class="endpoint" onclick="testEndpoint('/api/collections/movies/stats')">
+                    <span class="method">GET</span>
+                    <span class="endpoint-url">/api/collections/movies/stats</span>
+                    <span class="endpoint-desc">Get movies statistics</span>
+                </div>
+            </div>
+
+            <div class="results" id="api-results">
+                <div class="loading">Click an endpoint to test it...</div>
             </div>
         </div>
     </div>
 
     <script>
-        class MongoDBExplorer {
-            constructor() {
-                this.currentCollection = null;
-                this.currentPage = 1;
-                this.currentLimit = 10;
-                this.init();
-            }
+        // Load initial stats
+        loadStats();
 
-            async init() {
-                await this.loadStats();
-                await this.loadCollections();
-                this.setupEventListeners();
-            }
-
-            async loadStats() {
-                try {
-                    const response = await fetch('/api/stats');
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    const stats = await response.json();
-                    this.renderStats(stats);
-                } catch (error) {
-                    console.error('Error loading stats:', error);
-                    document.getElementById('stats-section').innerHTML = `
-                        <div class="error">
-                            Failed to load database statistics: ${error.message}
-                        </div>
-                    `;
-                }
-            }
-
-            async loadCollections() {
-                try {
-                    const response = await fetch('/api/collections');
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    const collections = await response.json();
-                    this.renderCollections(collections);
-                    this.populateCollectionSelect(collections);
-                } catch (error) {
-                    console.error('Error loading collections:', error);
-                    document.getElementById('data-content').innerHTML = `
-                        <div class="error">
-                            Failed to load collections: ${error.message}
-                        </div>
-                    `;
-                }
-            }
-
-            renderStats(stats) {
-                const statsHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.collections}</div>
-                            <div class="stat-label">Collections</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.totalDocuments.toLocaleString()}</div>
-                            <div class="stat-label">Total Documents</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.database}</div>
-                            <div class="stat-label">Database</div>
-                        </div>
-                    </div>
-                `;
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
                 
-                document.getElementById('stats-section').innerHTML = statsHTML;
-            }
-
-            renderCollections(collections) {
-                const collectionsHTML = `
-                    <div class="collections-grid">
-                        ${collections.map(collection => `
-                            <div class="collection-card" onclick="explorer.loadCollectionData('${collection.name}')">
-                                <div class="collection-name">${collection.name}</div>
-                                <div class="collection-count">${collection.count.toLocaleString()} documents</div>
-                                <div class="collection-actions">
-                                    <button class="btn btn-primary" onclick="event.stopPropagation(); explorer.loadCollectionData('${collection.name}')">
-                                        View Data
-                                    </button>
-                                    <button class="btn btn-secondary" onclick="event.stopPropagation(); explorer.exportCollection('${collection.name}')">
-                                        Export
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+                document.getElementById('collections-count').textContent = data.collections || 0;
+                document.getElementById('documents-count').textContent = data.totalDocuments || 0;
+                document.getElementById('data-size').textContent = formatBytes(data.totalSize || 0);
+                document.getElementById('indexes-count').textContent = data.totalIndexes || 0;
                 
-                document.getElementById('stats-section').innerHTML += collectionsHTML;
-            }
-
-            populateCollectionSelect(collections) {
-                const select = document.getElementById('collection-select');
-                collections.forEach(collection => {
-                    const option = document.createElement('option');
-                    option.value = collection.name;
-                    option.textContent = `${collection.name} (${collection.count.toLocaleString()})`;
-                    select.appendChild(option);
-                });
-            }
-
-            async loadCollectionData(collectionName, page = 1) {
-                this.currentCollection = collectionName;
-                this.currentPage = page;
-                
-                document.getElementById('data-title').textContent = `📊 ${collectionName} Data`;
-                document.getElementById('data-content').innerHTML = '<div class="loading">Loading data...</div>';
-                
-                try {
-                    const response = await fetch(`/api/collections/${collectionName}?page=${page}&limit=${this.currentLimit}`);
-                    const data = await response.json();
-                    this.renderCollectionData(data);
-                } catch (error) {
-                    document.getElementById('data-content').innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
-                }
-            }
-
-            renderCollectionData(data) {
-                if (!data.documents || data.documents.length === 0) {
-                    document.getElementById('data-content').innerHTML = '<p>No documents found.</p>';
-                    return;
-                }
-
-                const firstDoc = data.documents[0];
-                const keys = Object.keys(firstDoc).slice(0, 5); // Show first 5 keys
-
-                const tableHTML = `
-                    <div>
-                        <p><strong>Showing ${data.documents.length} of ${data.total.toLocaleString()} documents (Page ${data.page} of ${data.totalPages})</strong></p>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    ${keys.map(key => `<th>${key}</th>`).join('')}
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${data.documents.map(doc => `
-                                    <tr>
-                                        ${keys.map(key => `<td>${this.formatValue(doc[key])}</td>`).join('')}
-                                        <td>
-                                            <button class="btn btn-primary" onclick="explorer.viewDocument('${data.collection}', '${doc._id}')">View</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        ${this.renderPagination(data)}
-                    </div>
-                `;
-
-                document.getElementById('data-content').innerHTML = tableHTML;
-            }
-
-            renderPagination(data) {
-                const { page, totalPages } = data;
-                const pages = [];
-
-                // Previous button
-                if (page > 1) {
-                    pages.push(`<button class="page-btn" onclick="explorer.loadCollectionData('${this.currentCollection}', ${page - 1})">Previous</button>`);
-                }
-
-                // Page numbers
-                const start = Math.max(1, page - 2);
-                const end = Math.min(totalPages, page + 2);
-                
-                for (let i = start; i <= end; i++) {
-                    const active = i === page ? 'active' : '';
-                    pages.push(`<button class="page-btn ${active}" onclick="explorer.loadCollectionData('${this.currentCollection}', ${i})">${i}</button>`);
-                }
-
-                // Next button
-                if (page < totalPages) {
-                    pages.push(`<button class="page-btn" onclick="explorer.loadCollectionData('${this.currentCollection}', ${page + 1})">Next</button>`);
-                }
-
-                return `<div class="pagination">${pages.join('')}</div>`;
-            }
-
-            formatValue(value) {
-                if (value === null || value === undefined) return '-';
-                if (typeof value === 'object') {
-                    return JSON.stringify(value).substring(0, 50) + '...';
-                }
-                const str = String(value);
-                return str.length > 50 ? str.substring(0, 50) + '...' : str;
-            }
-
-            async viewDocument(collection, id) {
-                try {
-                    const response = await fetch(`/api/collections/${collection}/${id}`);
-                    const doc = await response.json();
-                    
-                    const modal = document.createElement('div');
-                    modal.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: rgba(0,0,0,0.8);
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        z-index: 1000;
-                    `;
-                    
-                    modal.innerHTML = `
-                        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 80%; max-height: 80%; overflow: auto;">
-                            <h2>Document Details</h2>
-                            <div class="json-viewer">${JSON.stringify(doc, null, 2)}</div>
-                            <button class="btn btn-secondary" onclick="document.body.removeChild(this.parentElement.parentElement)" style="margin-top: 20px;">Close</button>
-                        </div>
-                    `;
-                    
-                    document.body.appendChild(modal);
-                } catch (error) {
-                    alert('Error loading document: ' + error.message);
-                }
-            }
-
-            async searchCollections() {
-                const collection = document.getElementById('collection-select').value;
-                const query = document.getElementById('search-query').value;
-                const field = document.getElementById('search-field').value;
-                
-                if (!collection || !query) {
-                    alert('Please select a collection and enter a search query');
-                    return;
-                }
-                
-                document.getElementById('data-title').textContent = `🔍 Search Results in ${collection}`;
-                document.getElementById('data-content').innerHTML = '<div class="loading">Searching...</div>';
-                
-                try {
-                    const params = new URLSearchParams({
-                        query: query,
-                        page: 1,
-                        limit: this.currentLimit
-                    });
-                    if (field) params.append('field', field);
-                    
-                    const response = await fetch(`/api/collections/${collection}/search?${params}`);
-                    const data = await response.json();
-                    this.renderCollectionData(data);
-                } catch (error) {
-                    document.getElementById('data-content').innerHTML = `<div class="error">Search error: ${error.message}</div>`;
-                }
-            }
-
-            exportCollection(collectionName) {
-                alert(`Export functionality for ${collectionName} would be implemented here`);
-            }
-
-            setupEventListeners() {
-                document.getElementById('search-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.searchCollections();
-                });
+                document.getElementById('connection-status').textContent = 'Connected';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('connection-status').textContent = 'Error';
             }
         }
 
-        // Initialize the explorer
-        const explorer = new MongoDBExplorer();
+        async function searchMovies() {
+            const query = document.getElementById('search-input').value.trim();
+            const resultsDiv = document.getElementById('search-results');
+            
+            if (!query) {
+                resultsDiv.innerHTML = '<div class="error">Please enter a search query</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+            
+            try {
+                const response = await fetch(`/api/collections/movies/search?q=${encodeURIComponent(query)}&limit=5`);
+                const data = await response.json();
+                
+                if (data.documents && data.documents.length > 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">Found ${data.documents.length} results:</div>
+                        <pre>${JSON.stringify(data.documents, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">No results found</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testEndpoint(endpoint) {
+            const resultsDiv = document.getElementById('api-results');
+            resultsDiv.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="success">✅ ${endpoint}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ ${endpoint}</div>
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Enter key support for search
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMovies();
+            }
+        });
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
     </script>
 </body>
 </html>
