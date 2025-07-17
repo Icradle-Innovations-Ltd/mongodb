@@ -361,12 +361,25 @@
     </div>
 
     <script>
+        // Configuration for different environments
+        const API_BASE_URL = window.location.origin;
+        
         // Load initial stats
         loadStats();
 
         async function loadStats() {
             try {
-                const response = await fetch('/api/stats');
+                const response = await fetch(`${API_BASE_URL}/api/stats`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid response format - expected JSON');
+                }
+                
                 const data = await response.json();
                 
                 document.getElementById('collections-count').textContent = data.collections || 0;
@@ -378,6 +391,12 @@
             } catch (error) {
                 console.error('Error loading stats:', error);
                 document.getElementById('connection-status').textContent = 'Error';
+                
+                // Show error message to user
+                document.getElementById('collections-count').textContent = 'Error';
+                document.getElementById('documents-count').textContent = 'Error';
+                document.getElementById('data-size').textContent = 'Error';
+                document.getElementById('indexes-count').textContent = 'Error';
             }
         }
 
@@ -393,7 +412,12 @@
             resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
             
             try {
-                const response = await fetch(`/api/collections/movies/search?q=${encodeURIComponent(query)}&limit=5`);
+                const response = await fetch(`${API_BASE_URL}/api/collections/movies/search?q=${encodeURIComponent(query)}&limit=5`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.documents && data.documents.length > 0) {
@@ -414,7 +438,13 @@
             resultsDiv.innerHTML = '<div class="loading">Loading...</div>';
             
             try {
-                const response = await fetch(endpoint);
+                const fullUrl = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+                const response = await fetch(fullUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 resultsDiv.innerHTML = `
