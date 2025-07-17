@@ -4,7 +4,7 @@ A professional MongoDB REST API server with an interactive dashboard, built with
 
 ## 🌐 Live Demo
 
-**🚀 [Live Demo](https://your-deployment-url.vercel.app)** - Interactive MongoDB Dashboard
+**🚀 [Live Demo]((https://mongodb-ochre.vercel.app/)* - Interactive MongoDB Dashboard
 
 *Note: Replace with your actual deployment URL once deployed*
 
