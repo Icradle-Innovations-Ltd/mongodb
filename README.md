@@ -2,6 +2,12 @@
 
 A professional MongoDB REST API server with an interactive dashboard, built with Node.js and Express.js. Features real-time database statistics, collection management, and a modern web interface.
 
+## 🌐 Live Demo
+
+**🚀 [Live Demo](https://your-deployment-url.vercel.app)** - Interactive MongoDB Dashboard
+
+*Note: Replace with your actual deployment URL once deployed*
+
 ## ✨ Features
 
 - **🚀 Interactive Dashboard** - Modern web interface with real-time statistics
@@ -166,9 +172,43 @@ npm start
 ```
 
 ### Production Deployment
-1. Set environment variables
-2. Configure MongoDB Atlas connection
-3. Deploy to your preferred hosting service
+
+#### Vercel Deployment (Recommended)
+1. **Prerequisites**
+   - Vercel account
+   - GitHub repository connected to Vercel
+   - MongoDB Atlas database with IP whitelist configured
+
+2. **Environment Variables**
+   Set these in your Vercel dashboard:
+   ```env
+   DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/
+   DATABASE_NAME=sample_mflix
+   NODE_ENV=production
+   ```
+
+3. **Deploy**
+   - Push to your main branch
+   - Vercel will automatically build and deploy
+   - The `vercel.json` configuration handles routing
+
+#### Other Platforms (Heroku, Railway, etc.)
+1. **Set environment variables**
+2. **Configure MongoDB Atlas connection**
+3. **Ensure Node.js version >= 14**
+4. **Deploy using platform-specific instructions**
+
+### Deployment Checklist
+- [ ] Environment variables configured
+- [ ] MongoDB Atlas IP whitelist updated (allow all: 0.0.0.0/0 for production)
+- [ ] Database connection string includes credentials
+- [ ] NODE_ENV set to "production"
+- [ ] Port configuration handled by platform (process.env.PORT)
+
+### Common Deployment Issues
+- **404 on API routes**: Ensure `vercel.json` is properly configured
+- **Database connection**: Check MongoDB Atlas network access settings
+- **Environment variables**: Verify all required env vars are set in deployment platform
 
 ## 🤝 Contributing
 
@@ -193,10 +233,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🐛 Issues & Support
 
+### Common Issues
+
+#### API Returns 404 or HTML Instead of JSON
+- **Solution**: Check if `vercel.json` is properly configured
+- **Check**: Ensure environment variables are set correctly
+- **Verify**: MongoDB Atlas network access allows your deployment IP
+
+#### Database Connection Errors
+- **Solution**: Update MongoDB Atlas network access to allow all IPs (0.0.0.0/0)
+- **Check**: Verify DATABASE_URL includes username and password
+- **Verify**: Database name matches your MongoDB Atlas database
+
+#### UI Shows "Error" Instead of Data
+- **Solution**: Check browser console for detailed error messages
+- **Check**: Ensure API endpoints are accessible from deployment URL
+- **Verify**: All environment variables are set in deployment platform
+
+### Getting Help
+
 If you encounter any issues or have questions:
 1. Check the [Issues](https://github.com/Icradle-Innovations-Ltd/mongodb/issues) tab
 2. Create a new issue if needed
-3. Provide detailed information about the problem
+3. Provide detailed information about the problem:
+   - Deployment platform (Vercel, Heroku, etc.)
+   - Error messages from browser console
+   - Environment setup details
 
 ## 📧 Contact
 
